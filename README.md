@@ -23,8 +23,6 @@ Finally, it will print that information to the screen and also to a {Diagnostic}
 
 ### Example script output:  
 ```
-JUST THE OUTPUT GENERATED FROM RUNNING THE TOOL
-```
 Top 10 Processes:
      423 C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
      308 C:\Windows\explorer.exe
