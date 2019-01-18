@@ -1,7 +1,7 @@
 [![Gitter chat](https://img.shields.io/badge/gitter-join%20chat-brightgreen.svg)](https://gitter.im/CiscoSecurity/AMP-for-Endpoints "Gitter chat")
 
 ### AMP for Endpoints Windows Tuning Tool:
-Windows Endpoint tuning tool provides a quick view of top file and process scans occurring with regards to the connector to assist with tuning.
+Windows Endpoint tuning tool provides a quick view of top file and process scans occurring on a connector, designed to assist with performance tuning.
 
 ### Before using you must have the following:
 Debug diagnostic file from the host in question
