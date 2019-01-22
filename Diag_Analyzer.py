@@ -4,7 +4,7 @@ import shutil
 import re
 from collections import Counter
 import sys
-
+import argparse
 
 '''
 Diag_analyzer.exe v0.4
@@ -23,14 +23,22 @@ Finally, it will print that information to the screen and also to a {Diagnostic}
 '''
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-t", "--time",
+                    help='Time to start looking at logs (Must be in double quotes).  For example\n"Jan 22 00:00:01"',
+                    required=False)
+parser.add_argument("-i", "--infile", help="Location of the diagnostic file", required=False)
+args = parser.parse_args()
+
+
 def get_source():
     if len(sys.argv) == 2:
         source = os.path.join(os.curdir, sys.argv[1])
         return source
 
-    elif len(sys.argv) > 2:
-        print("Usage:\nDiag_analyzer.exe\nor\nDiag_analyzer.exe path/to/diagnostic")
-        exit()
+    elif args.infile:
+        source = os.path.join(os.curdir, args.infile)
+        return source
 
     else:
         for file in os.listdir(os.curdir):
@@ -97,6 +105,7 @@ def print_info(data, name, count):
         print("\n\n")
         f.write("\n\n")
 
+
 def print_info_to_file(data, name):
     with open("{}-summary.txt".format(source.split('.')[0]), "a") as f:
         f.write("All {}:\n".format(name))
@@ -104,6 +113,7 @@ def print_info_to_file(data, name):
             output = '{0:>8}'.format(i[1]), i[0].rstrip()
             f.write("{} {}\n".format(str(output[0]), str(output[1])))
         f.write("\n\n")
+
 
 source = get_source().split('\\')[1]
 output = "{}\\{}".format(os.getcwd(), source.split('.')[0])
@@ -121,13 +131,20 @@ log_files2.append(log_files[0])
 data = []
 for log in log_files2:
     r = r'(\w{3} \d{1,2} \d\d:\d\d:\d\d).*Event::Handle.*\\\\\?\\(.*)\(\\\\\?\\.*\).*\\\\\?\\(.*)'
+    r_d = r'(\w{3} \d{1,2} \d\d:\d\d:\d\d)'
     with open(output+"/"+log, errors="ignore") as f:
         log_read = f.readlines()
     for line in log_read:
         if "Event::HandleCreation" in line:
-            reg = re.findall(r, line)
-            if reg:
-                data.append("{},{},{}\n".format(reg[0][0], reg[0][1], reg[0][2]))
+            if args.time:
+                if re.findall(r_d, line)[0] > args.time:
+                    reg = re.findall(r, line)
+                    if reg:
+                        data.append("{},{},{}\n".format(reg[0][0], reg[0][1], reg[0][2]))
+            else:
+                reg = re.findall(r, line)
+                if reg:
+                    data.append("{},{},{}\n".format(reg[0][0], reg[0][1], reg[0][2]))
 
 # Get Process information and print to screen and log
 process_list = list(map(lambda x: x.split(',')[2], data))
