@@ -17,7 +17,7 @@ OR
 Additional flags:
  -t "<time>": specify time for log inclusion
 
- time format: 3 letter month day 24hour:minute:second i.e. Jan 01 01:01:01 is January 1st at 1:01:01AM
+ time format: 3_letter_month 2_digit_day 24hour:minute:second i.e. Jan 01 01:01:01 is January 1st at 1:01:01AM
  
  Example: Diag_analyzer.exe -t "Jan 01 01:01:01"
  Results will be based on the logs starting at specified time until end of logs
@@ -86,6 +86,7 @@ Top 100 Paths:
       75 C:\Windows\CCM\SystemTemp
       46 C:\Windows\Temp
       ...
+      
 All Files:
       22 C:\Windows\CCM\clientstate.dat
       21 C:\Windows\System32\config\systemprofile\AppData\Local\Microsoft\Windows\PowerShell\StartupProfileData-NonInteractive
