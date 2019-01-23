@@ -7,14 +7,30 @@ Windows Endpoint tuning tool provides a quick view of top file and process scans
 Debug diagnostic file from the host in question
 
 ### Usage:
+Place PE in the directory where the debug diagnostic file is to run the tool.
 ```
 Diag_analyzer.exe 
 	- will use the first diagnostic in the directory alphabetically
 ```	
-or
+OR
 ```
-Diag_analyzer.py Diagnostic_File.7z
-	- will use the diagnostic file specified
+Additional flags:
+ -t "<time>": specify time for log inclusion
+
+ time format: 3 letter month day 24hour:minute:second i.e. Jan 01 01:01:01 is January 1st at 1:01:01AM
+ 
+ Example: Diag_analyzer.exe -t "Jan 01 01:01:01"
+ Results will be based on the logs starting at specified time until end of logs
+ 
+ 
+ -i : specify diagnostic file
+ Example: Diag_analyzer.exe -i Cisco_AMP_Diag.7z
+ Results will be based on the specified diagnostic file
+ 
+ 
+ Combo results
+ Example: Diag_analyzer.exe -i Cisco_AMP_diah.7z -t "Jan 01 01:01:01"
+ Results: Specified diagnostic file will be analyzed from Jan 1st, 01:01:01 AM to current
 ```
 Diag_analyzer.exe will check the provided AMP diagnostic file for sfc.exe.log files.  
 It will then create a directory with the diagnostic file name and store the log files outside of the .7z, in the parent directory of the diagnostic.
