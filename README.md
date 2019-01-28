@@ -91,10 +91,8 @@ All Files:
       22 C:\Windows\CCM\clientstate.dat
       21 C:\Windows\System32\config\systemprofile\AppData\Local\Microsoft\Windows\PowerShell\StartupProfileData-NonInteractive
 ```
-```
 
-
-###Beta Version
+### Beta Version
 The Beta version adds a -d (directory) option allowing you to process results for all diagnostics in the directory and return the combines results.  This could be useful for determining appropriate exclusions for an entire department at once.
 
 ```
