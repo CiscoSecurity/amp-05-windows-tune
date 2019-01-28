@@ -96,7 +96,8 @@ All Files:
 The Beta version adds a -d (directory) option allowing you to process results for all diagnostics in the directory and return the combines results.  This could be useful for determining appropriate exclusions for an entire department at once.
 
 ```
-Diag_analyzer_beta.exe -d .
+Diag_analyzer_beta.exe -d C:/Users/testUser/Diagnostics
 	- Will process all AMP diagnostics in the directory with the execuatable
-	
+	- Use "-d ." to process current directory  
+	- Do not put quotes around the path
 ```
