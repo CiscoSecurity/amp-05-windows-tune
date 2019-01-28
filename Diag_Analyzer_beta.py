@@ -31,12 +31,13 @@ Written by Matthew Franks and Brandon Macer
 '''
 
 
+# Set up the Argument Parser
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--time",
                     help='Time to start looking at logs (Must be in double quotes).  For example\n"Jan 22 00:00:01"',
                     required=False)
 parser.add_argument("-i", "--infile", help="Location of the diagnostic file", required=False)
-parser.add_argument("-d", "--directory", help="Directory containing diagnostic files", required=False)
+parser.add_argument("-d", "--directory", help="Directory location of the diagnostic files", required=False)
 args = parser.parse_args()
 
 
@@ -60,14 +61,48 @@ def get_source():
                 return source
 
 
-def get_sfc_path():
-    walk = list(os.walk(os.getcwd()))
-    paths = []
-    for i in walk:
-        for j in i[-1]:
-            paths.append("{}/{}".format(i[0], j).replace("\\", "/"))
-    sfc_paths = list(filter(lambda x: "sfc.exe" in x and ".log" in x, paths))
-    return sfc_paths
+def get_log_files_directory(source):
+    files_7z = []
+    for file in os.listdir(source):
+        if file.endswith(".7z"):
+            files_7z.append(file)
+    log_files = []
+    for file in files_7z:
+        log_files.append(get_log_files(file))
+    return(log_files[0])
+
+
+def get_log_files(file):
+    with zipfile.ZipFile(file) as archive:
+        count = 1
+        namelist = []
+        for x in archive.namelist():
+            namelist.append(x)
+        max_version = get_max_version(namelist)
+        for f in archive.namelist():
+            if get_version(f) == max_version:
+                fname = os.path.basename(f)
+                source = archive.open(f)
+                if not os.path.isfile(os.path.join(output, fname)):
+                    target = open(os.path.join(output, fname), "wb")
+                    with source, target:
+                        shutil.copyfileobj(source, target)
+                else:
+                    target = open(os.path.join(output, fname+str(count)+".log"), "wb")
+                    count += 1
+                    with source, target:
+                        shutil.copyfileobj(source, target)
+
+    archive.close()
+    return os.listdir(output)
+
+
+def get_version(path):
+    r = r'(\d{1,2}\.\d{1,2}\.\d{1,2}).*sfc\.exe.*'
+    reg = re.findall(r, path)
+    if reg:
+        return reg[0]
+    return "0.0.0"
 
 
 def get_max_version(list_of_paths):
@@ -81,166 +116,121 @@ def get_max_version(list_of_paths):
     return ".".join(list(map(lambda x: str(x), max_version)))
 
 
-def get_version(path):
-    r = r'(\d{1,2}\.\d{1,2}\.\d{1,2}).*sfc\.exe.*'
-    reg = re.findall(r, path)
-    if reg:
-        return reg[0]
-    return "0.0.0"
+def process_logs(log_files):
+    data = []
+    for log in log_files:
+        r = r'(\w{3} \d{1,2} \d\d:\d\d:\d\d).*Event::Handle.*\\\\\?\\(.*)\(\\\\\?\\.*\).*\\\\\?\\(.*)'
+        r_d = r'(\w{3} \d{1,2} \d\d:\d\d:\d\d)'
+        with open(output + "/" + log, errors="ignore") as f:
+            log_read = f.readlines()
+        for line in log_read:
+            if "Event::HandleCreation" in line:
+                if args.time:
+                    if re.findall(r_d, line)[0] > args.time:
+                        reg = re.findall(r, line)
+                        if reg:
+                            data.append("{},{},{}\n".format(reg[0][0], reg[0][1], reg[0][2]))
+                else:
+                    reg = re.findall(r, line)
+                    if reg:
+                        data.append("{},{},{}\n".format(reg[0][0], reg[0][1], reg[0][2]))
+    return data
 
 
-def get_log_files(source):
-    print("Moving log files into the output directory.\n")
-    if args.directory:
-        files = []
-        for file in os.listdir(source):
-            if file.endswith(".7z"):
-                files.append(file)
-        print("Processing the following diagnostics:\n")
-        for file in files:
-            print(file)
-            with zipfile.ZipFile(file) as archive:
-                namelist = []
-                for x in archive.namelist():
-                    namelist.append(x)
-                max_version = get_max_version(namelist)
-                for f in archive.namelist():
-                    if get_version(f) == max_version:
-                        fname = os.path.basename(f)
-                        source = archive.open(f)
-                        target = open(os.path.join(output, fname), "wb")
-                        with source, target:
-                            shutil.copyfileobj(source, target)
-            archive.close()
-        return os.listdir(output)
-
-    else:
-        with zipfile.ZipFile(source) as archive:
-            namelist = []
-            for x in archive.namelist():
-                namelist.append(x)
-            max_version = get_max_version(namelist)
-            for f in archive.namelist():
-                if get_version(f) == max_version:
-                    fname = os.path.basename(f)
-                    source = archive.open(f)
-                    target = open(os.path.join(output, fname), "wb")
-                    with source, target:
-                        shutil.copyfileobj(source, target)
-        archive.close()
-        return os.listdir(output)
+def common_data(data_list, name, print_count):
+    common_data = Counter(data_list).most_common(print_count)
+    print_info(common_data, name, print_count)
 
 
 def print_info(data, name, count):
     if args.directory:
-        with open("Directory-summary.txt", "a") as f:
-            print("Top {} {}:\n".format(count, name))
-            f.write("Top {} {}:\n".format(count, name))
-            for i in data:
-                print('{0:>8}'.format(i[1]), i[0].rstrip())
-                output = '{0:>8}'.format(i[1]), i[0].rstrip()
-                f.write("{} {}\n".format(str(output[0]), str(output[1])))
-            print("\n\n")
-            f.write("\n\n")
-
+        file_name = "Directory-summary.txt"
     else:
-        with open("{}-summary.txt".format(source.split('.')[0]), "a") as f:
-            print("Top {} {}:\n".format(count, name))
-            f.write("Top {} {}:\n".format(count, name))
-            for i in data:
-                print('{0:>8}'.format(i[1]), i[0].rstrip())
-                output = '{0:>8}'.format(i[1]), i[0].rstrip()
-                f.write("{} {}\n".format(str(output[0]), str(output[1])))
-            print("\n\n")
-            f.write("\n\n")
+        file_name = f"{source.split('.')[0]}-summary.txt"
+    with open(f"{file_name}", "a") as f:
+        print("Top {} {}:\n".format(count, name))
+        f.write("Top {} {}:\n".format(count, name))
+        for i in data:
+            print('{0:>8}'.format(i[1]), i[0].rstrip())
+            output = '{0:>8}'.format(i[1]), i[0].rstrip()
+            f.write("{} {}\n".format(str(output[0]), str(output[1])))
+        print("\n\n")
+        f.write("\n\n")
 
 
-def print_info_to_file(data, name):
+def print_all_files(data, name):
     if args.directory:
-        with open("Directory-summary.txt", "a") as f:
-            f.write("All {}:\n".format(name))
-            for i in data:
-                output = '{0:>8}'.format(i[1]), i[0].rstrip()
-                f.write("{} {}\n".format(str(output[0]), str(output[1])))
-            f.write("\n\n")
-
+        file_name = "Directory-summary.txt"
     else:
-        with open("{}-summary.txt".format(source.split('.')[0]), "a") as f:
-            f.write("All {}:\n".format(name))
-            for i in data:
-                output = '{0:>8}'.format(i[1]), i[0].rstrip()
-                f.write("{} {}\n".format(str(output[0]), str(output[1])))
-            f.write("\n\n")
+        file_name = f"{source.split('.')[0]}-summary.txt"
+    with open(file_name, "a") as f:
+        f.write("All {}:\n".format(name))
+        for i in data:
+            output = '{0:>8}'.format(i[1]), i[0].rstrip()
+            f.write("{} {}\n".format(str(output[0]), str(output[1])))
+        f.write("\n\n")
 
-if args.directory:
-    source = get_source()
-    output = f"{args.directory}\\DirectoryLogFiles"
-else:
-    source = get_source().split('\\')[1]
-    output = "{}\\{}".format(os.getcwd(), source.split('.')[0])
-try:
-    if not os.path.exists(output):
-        os.mkdir(output)
-except OSError:
-    print("Creation of the directory {} has failed.\n".format(output))
-else:
-    print("Successfully created the directory {}.\n".format(output))
-log_files = get_log_files(source)
-print("\nParsing the logs.\n")
-log_files2 = log_files[1:]
-log_files2.append(log_files[0])
-data = []
-for log in log_files2:
-    r = r'(\w{3} \d{1,2} \d\d:\d\d:\d\d).*Event::Handle.*\\\\\?\\(.*)\(\\\\\?\\.*\).*\\\\\?\\(.*)'
-    r_d = r'(\w{3} \d{1,2} \d\d:\d\d:\d\d)'
-    with open(output+"/"+log, errors="ignore") as f:
-        log_read = f.readlines()
-    for line in log_read:
-        if "Event::HandleCreation" in line:
-            if args.time:
-                if re.findall(r_d, line)[0] > args.time:
-                    reg = re.findall(r, line)
-                    if reg:
-                        data.append("{},{},{}\n".format(reg[0][0], reg[0][1], reg[0][2]))
-            else:
-                reg = re.findall(r, line)
-                if reg:
-                    data.append("{},{},{}\n".format(reg[0][0], reg[0][1], reg[0][2]))
 
-# Get Process information and print to screen and log
-process_list = list(map(lambda x: x.split(',')[2], data))
-common_process = Counter(process_list).most_common(10)
-print_info(common_process, "Processes", 10)
+if __name__ == '__main__':
+    # Find the .7z file(s) being processed
+    if args.directory:
+        source = get_source()
+        output = f"{args.directory}/DirectoryLogFiles"
+    else:
+        source = get_source().split('\\')[1]
+        output = "{}\\{}".format(os.getcwd(), source.split('.')[0])
 
-# Get File information and print to screen and log
-file_list = list(map(lambda x: x.split(',')[1], data))
-common_files = Counter(file_list).most_common(10)
-print_info(common_files, "Files", 10)
+    # Create the output directory
+    try:
+        if not os.path.exists(output):
+            os.mkdir(output)
+            print("Successfully created the directory {}.\n".format(output))
+        else:
+            print("Directory {} already exists.\n".format(output))
+    except OSError:
+        print("Creation of the directory {} has failed.\n".format(output))
 
-# Get Extension information and print to screen and log
-extension_list = list(map(lambda x: x.split(',')[1], data))
-extension_list_scrubbed = []
-for i in extension_list:
-    if '.' in i.split('\\')[-1]:
-        x = i.split('.')[-1]
-        extension_list_scrubbed.append(x)
-common_extensions = Counter(extension_list_scrubbed).most_common(10)
-print_info(common_extensions, "Extensions", 10)
 
-# Get Path information and print to screen and log
-path_list = list(map(lambda x: x.split(',')[1], data))
-path_list_scrubbed = []
-for i in path_list:
-    path_only = i.split('\\')[:-1]
-    path_only_merged = "\\".join(path_only)
-    path_list_scrubbed.append(path_only_merged)
-common_paths = Counter(path_list_scrubbed).most_common(100)
-print_info(common_paths, "Paths", 100)
+    # Pull the log files from the archive(s)
+    print("Moving log files into the output directory.\n")
+    if args.directory:
+        log_files = get_log_files_directory(source)
+    else:
+        log_files = get_log_files(source)
 
-# Print all file scans to summary file
-all_files = Counter(file_list).most_common(100000)
-print_info_to_file(all_files, "Files")
+    # Process the logs
+    data = process_logs(log_files)
 
-#Hold screen open until Enter is pressed
-while re.match(u'\u23CE', input("Press Enter to exit:\n")):
-    break
+    # Get Process information and print to screen and log
+    process_list = list(map(lambda x: x.split(',')[2], data))
+    common_data(process_list, "Processes", 10)
+
+    # Get File information and print to screen and log
+    file_list = list(map(lambda x: x.split(',')[1], data))
+    common_data(file_list, "Files", 10)
+
+    # Get Extension information and print to screen and log
+    extension_list = list(map(lambda x: x.split(',')[1], data))
+    extension_list_scrubbed = []
+    for i in extension_list:
+        if '.' in i.split('\\')[-1]:
+            x = i.split('.')[-1]
+            extension_list_scrubbed.append(x)
+    common_data(extension_list_scrubbed, "Extensions", 10)
+
+    # Get Path information and print to screen and log
+    path_list = list(map(lambda x: x.split(',')[1], data))
+    path_list_scrubbed = []
+    for i in path_list:
+        path_only = i.split('\\')[:-1]
+        path_only_merged = "\\".join(path_only)
+        path_list_scrubbed.append(path_only_merged)
+    common_data(path_list_scrubbed, "Paths", 100)
+
+    # Print all file scans to summary file
+    all_files = Counter(file_list).most_common(100000)
+    print_all_files(all_files, "Files")
+
+    # Hold screen open until Enter is pressed
+    while re.match(u'\u23CE', input("Press Enter to exit:\n")):
+        break
