@@ -19,8 +19,8 @@ Usage:
     Diag_analyzer.exe -i Diagnostic_File.7z -t "Jan 10 00:00:01"
     #Will use the diagnostic file specified and only return events from the date specified until the end of the session
     
-    Diag_analyzer.exe -d 'C:/Users/testUser/DiagFiles'
-    #Will process all diagnostics in the directory and provide summarized results.  Use '-d .' for current directory.
+    Diag_analyzer.exe -d .
+    #Will process all diagnostics in the directory and provide summarized results.  Only works for current directory for now.
 
 Diag_analyzer.exe will check the provided AMP diagnostic file for sfc.exe.log files.  
 It will then create a directory with the diagnostic file name and store the log files outside of the .7z.
