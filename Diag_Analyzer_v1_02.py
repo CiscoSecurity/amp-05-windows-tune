@@ -255,10 +255,11 @@ def main():
     try:
         if not os.path.exists(output):
             os.mkdir(output)
+            print("Successfully created the directory {}.\n".format(output))
+        else:
+            print(f"{output} directory already exists.\n")
     except OSError:
-        print("Creation of the directory {} has failed.\n".format(output))
-    else:
-        print("Successfully created the directory {}.\n".format(output))
+        exit("Creation of the directory {} has failed.\n".format(output))
     if args.directory:
         log_files = get_log_files_directory(args.directory, output)
     else:
@@ -323,7 +324,7 @@ def main():
     print_info_to_file(all_files, "Files", source, output)
 
     #Hold screen open until Enter is pressed
-    while re.match(u'\u23CE', input("Press Enter to exit:\n")):
+    while re.match(u'\u23CE', input(f"Logs written to {output}.\n\nPress Enter to exit:\n")):
         break
 
 if __name__ == '__main__':
