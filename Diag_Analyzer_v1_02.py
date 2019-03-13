@@ -204,7 +204,7 @@ def print_info(data, name, source, output, count=100000):
     if args.directory:
         filename = 'Directory-summary.txt'
     else:
-        filename = f'{source.split(".")[0]}'
+        filename = f'{source.split(".")[0]}-summary.txt'
     with open(filename, "a") as f:
         print("\n-----------------------------------\nTop {} {}:\n".format(count, name))
         f.write("Top {} {}:\n".format(count, name))
