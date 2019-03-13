@@ -27,7 +27,16 @@ Additional flags:
  Example: Diag_analyzer.exe -i Cisco_AMP_Diag.7z
  Results will be based on the specified diagnostic file
  
- 
+ -d : specify a directory of Diagnostic files to be analyzed
+ Example: Diag_analyzer.exe -d C:/Users/testUser/Diagnostics
+	- Will process all AMP diagnostics in the directory with the execuatable
+	- Use "-d ." to process current directory  
+	- Do not put quotes around the path
+	
+ -e : pull all exclusions from the policy.xml
+ Note: If you do not specify 0 or 1 for this option, you will need to interact with the script.
+ Example: Diag_analyzer.exe -e 1
+	
  Combo results
  Example: Diag_analyzer.exe -i Cisco_AMP_diah.7z -t "Jan 01 01:01:01"
  Results: Specified diagnostic file will be analyzed from Jan 1st, 01:01:01 AM to current
@@ -90,14 +99,4 @@ Top 100 Paths:
 All Files:
       22 C:\Windows\CCM\clientstate.dat
       21 C:\Windows\System32\config\systemprofile\AppData\Local\Microsoft\Windows\PowerShell\StartupProfileData-NonInteractive
-```
-
-### Beta Version
-The Beta version adds a -d (directory) option allowing you to process results for all diagnostics in the directory and return the combines results.  This could be useful for determining appropriate exclusions for an entire department at once.
-
-```
-Diag_analyzer_beta.exe -d C:/Users/testUser/Diagnostics
-	- Will process all AMP diagnostics in the directory with the execuatable
-	- Use "-d ." to process current directory  
-	- Do not put quotes around the path
 ```
