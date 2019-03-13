@@ -324,7 +324,11 @@ def main():
     print_info_to_file(all_files, "Files", source, output)
 
     #Hold screen open until Enter is pressed
-    while re.match(u'\u23CE', input(f"Logs written to {output}.\n\nPress Enter to exit:\n")):
+    if args.directory:
+        filename = 'Directory-summary.txt'
+    else:
+        filename = f'{source.split(".")[0]}-summary.txt'
+    while re.match(u'\u23CE', input(f"Logs written to {filename}.\n\nPress Enter to exit:\n")):
         break
 
 if __name__ == '__main__':
