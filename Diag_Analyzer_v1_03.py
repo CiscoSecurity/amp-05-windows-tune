@@ -103,7 +103,7 @@ def print_policy_info(excl_list, name, source):
             f.write("\n\n")
 
 
-def parse_policy_xml(policy_xml, source, output):
+def parse_policy_xml(policy_xml, source, output, print_exclusions):
     with open(output + "/" + policy_xml, errors="ignore") as f:
         tree = ET.parse(f)
         root = tree.getroot()
@@ -253,7 +253,6 @@ def print_info_to_file(data, name, source, output):
 
 
 def choose_show_exclusions():
-    global print_exclusions
     if args.exclusions == '1':
         print_exclusions = True
     elif args.exclusions == '0':
@@ -267,19 +266,20 @@ def choose_show_exclusions():
         else:
             print("Your choice was not y or n.  Please try again.")
             choose_show_exclusions()
+    return print_exclusions
 
 
 def main():
     try:
-        source = get_source().split('\\')[1]
+        source = get_source().split(os.sep)[1]
     except AttributeError:
         exit("No Diagnostic file found.")
-    output = "{}\\{}".format(os.getcwd(), source.split('.')[0])
+    output = os.path.join(os.getcwd(), source.split('.')[0])
     print("\nCreating directory\n")
     try:
         if not os.path.exists(output):
             os.mkdir(output)
-            print("Successfully created the directory {}.\n".format(output))
+            print("Successfully created the directory '{}'.\n".format(output))
         else:
             print(f"{output} directory already exists.\n")
     except OSError:
@@ -292,10 +292,10 @@ def main():
     # Put sfc.exe.log at the end of the list to maintain chronological order
 
     data = []
-    choose_show_exclusions()
+    print_exclusions = choose_show_exclusions()
     for log in log_files:
         if log.endswith('policy.xml'):
-            parse_policy_xml(log, source, output)
+            parse_policy_xml(log, source, output, print_exclusions)
         else:
             r = r'(\w{3} \d{1,2} \d\d:\d\d:\d\d).*Event::Handle.*\\\\\?\\(.*)\(\\\\\?\\.*\).*\\\\\?\\(.*)'
             r_d = r'(\w{3} \d{1,2} \d\d:\d\d:\d\d)'
