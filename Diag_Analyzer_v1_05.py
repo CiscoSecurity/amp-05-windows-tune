@@ -60,17 +60,18 @@ def get_source():
 
 def get_max_version(list_of_paths):
     max_version = [0, 0, 0]
-    r = r'\d{1,2}\.\d{1,2}\.\d{1,2}'
+    r = r'\d{1,2}\.\d{1,2}\.\d{1,2}.\d{1,5}'
     for path in list_of_paths:
         reg = re.findall(r, path)
         if reg:
             if list(map(lambda x: int(x), reg[0].split("."))) > max_version:
                 max_version = list(map(lambda x: int(x), reg[0].split(".")))
+    print("Found latest version: " + ".".join(list(map(lambda x: str(x), max_version))) + "\n")
     return ".".join(list(map(lambda x: str(x), max_version)))
 
 
 def get_version(path):
-    r = r'(\d{1,2}\.\d{1,2}\.\d{1,2}).*sfc\.exe.*'
+    r = r'(\d{1,2}\.\d{1,2}\.\d{1,2}.\d{1,5}).*sfc\.exe.*'
     reg = re.findall(r, path)
     if reg:
         return reg[0]
@@ -217,8 +218,6 @@ def main():
         filename = 'Directory-summary.txt'
     else:
         filename = f'{source.split(".")[0]}-summary.txt'
-    while re.match(u'\u23CE', input(f"Logs written to {filename}.\n\nPress Enter to exit:\n")):
-        break
 
 if __name__ == '__main__':
     main()
