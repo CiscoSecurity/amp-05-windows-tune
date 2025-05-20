@@ -140,7 +140,7 @@ def print_info_to_file(data, name, source, output):
 
 def main():
     try:
-        source = get_source().split(os.sep)[1]
+        source = get_source()
     except AttributeError:
         exit("No Diagnostic file found.")
     output = os.path.join(os.getcwd(), source.split('.')[0])
@@ -162,9 +162,11 @@ def main():
 
     data = []
     for log in log_files:
-        r = r'(\w{3} \d{1,2} \d\d:\d\d:\d\d).*Event::Handle.*\\\\\?\\(.*)\(\\\\\?\\.*\).*\\\\\?\\(.*)'
+        if os.path.isdir(os.path.join(output, log)):
+            continue  # Skip directories
+        r = r'(\w{3} \d{1,2} \d\d:\d\d:\d\d).*Event::Handle.*\\\\\?\\(.*)\\(\\\\\?\\.*\\).*\\\\\?\\(.*)'
         r_d = r'(\w{3} \d{1,2} \d\d:\d\d:\d\d)'
-        with open(output+"/"+log, errors="ignore") as f:
+        with open(os.path.join(output, log), errors="ignore") as f:
             log_read = f.readlines()
         for line in log_read:
             if "Event::HandleCreation" in line:
