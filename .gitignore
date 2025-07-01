@@ -1,0 +1,22 @@
+# Python virtual environment
+venv/
+.venv/
+
+# Diagnostic and log files
+*.7z
+*.zip
+*.log
+*-summary.txt
+
+# Program files and output
+Program Files/
+output/
+
+# System files
+.DS_Store
+
+results/
+__pycache__/
+generated_output/__pycache__/
+build/
+gui.spec
